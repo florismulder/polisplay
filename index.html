@@ -42,6 +42,7 @@ body {
 /* ── SCREENS ── */
 .screen { display: none; }
 .active { display: block; }
+.wait-screen.active { display: flex; }
 #level2.active {
   display: flex;
   flex-direction: column;
@@ -510,7 +511,7 @@ body {
 .l3-fb.show { color: var(--black); }
 
 /* ── WACHTSCHERM ── */
-.wait-screen { padding: 28px 20px 24px; display: flex; flex-direction: column; min-height: 100vh; }
+.wait-screen { padding: 28px 20px 24px; flex-direction: column; min-height: 100vh; }
 .wait-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #aaa; margin-bottom: 6px; }
 .wait-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
 .wait-score-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 24px; }
@@ -518,8 +519,8 @@ body {
 .wait-score-sub { font-size: 15px; color: #aaa; font-weight: 600; }
 .wait-divider { height: 1.5px; background: #e8e8e8; border-radius: 99px; margin-bottom: 22px; }
 
-.rebus-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #aaa; margin-bottom: 10px; }
-.rebus-hint { font-size: 13px; color: #888; font-weight: 600; margin-bottom: 16px; line-height: 1.5; }
+.rebus-label { display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #aaa; margin-bottom: 10px; }
+.rebus-hint { display: block; font-size: 13px; color: #888; font-weight: 600; margin-bottom: 16px; line-height: 1.5; }
 .rebus-emojis { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
 .rebus-emoji { font-size: 34px; line-height: 1; }
 .rebus-op { font-size: 20px; font-weight: 800; color: #ccc; }
