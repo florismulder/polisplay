@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PolisPlay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+
+:root {
+  --magenta:  #ff00a8;
+  --green:    #1db954;
+  --green-bg: #d4f7e0;
+  --grey:     #999;
+  --grey-bg:  #e4e4e4;
+  --red:      #e53935;
+  --red-bg:   #fde0e0;
+  --black:    #111;
+  --off:      #f5f5f5;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #f0f0f0;
+  font-family: 'Nunito', system-ui, sans-serif;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.app {
+  max-width: 420px;
+  width: 100%;
+  min-height: 100vh;
+  background: #f5f5f5;
+  position: relative;
+}
+
+/* ── SCREENS ── */
+.screen { display: none; }
+.active { display: block; }
+#level2.active {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* ── SHARED ── */
+.padded { padding: 24px 20px; }
+
+.btn {
+  display: block;
+  width: 100%;
+  background: var(--magenta);
+  color: #fff;
+  padding: 18px 20px;
+  border-radius: 14px;
+  text-align: center;
+  font-family: 'Nunito', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  user-select: none;
+  border: none;
+  margin-top: 20px;
+  transition: transform 0.1s, opacity 0.15s;
+}
+.btn:active { transform: scale(0.97); opacity: 0.85; }
+.btn-dark { background: var(--black); }
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--black);
+  color: var(--black);
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px 6px;
+  font-size: 13px;
+  color: #666;
+}
+
+.player-name {
+  font-weight: 700;
+  color: var(--magenta);
+  font-size: 12px;
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.score-display { font-weight: 800; color: var(--black); font-size: 14px; }
+
+.progress-bar {
+  height: 3px;
+  background: #ddd;
+  margin: 4px 20px 12px;
+  border-radius: 99px;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--magenta);
+  border-radius: 99px;
+  transition: width 0.35s ease;
+  width: 0%;
+}
+
+/* ── HOME ── */
+#home { padding: 32px 20px 24px; }
+
+.logo {
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 6px;
+  letter-spacing: -1px;
+}
+.logo-accent { color: var(--magenta); }
+
+.tagline {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 24px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.avatar-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 2px solid var(--black);
+  border-radius: 40px;
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 28px;
+}
+.avatar-dot {
+  width: 10px;
+  height: 10px;
+  background: var(--magenta);
+  border-radius: 50%;
+  animation: pulse 1.4s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.rule-list { margin-bottom: 24px; }
+.rule-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1.5px solid #e8e8e8;
+}
+.rule-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  flex-shrink: 0;
+}
+.icon-reject { background: var(--red-bg); }
+.icon-accept { background: var(--green-bg); }
+
+/* ── LEVEL 1 ── */
+#level1 { padding: 0; }
+
+.card-wrap { padding: 4px 20px 0; }
+
+.card {
+  background: #fff;
+  border: 2.5px solid var(--black);
+  border-radius: 22px;
+  padding: 36px 24px;
+  text-align: center;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.4;
+  min-height: 148px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  user-select: none;
+  touch-action: pan-y;
+  position: relative;
+}
+.card:active { cursor: grabbing; }
+
+.swipe-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 24px 0;
+  font-size: 11px;
+  color: #bbb;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.answer-row {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px 24px;
+}
+.answer-btn {
+  flex: 1;
+  padding: 18px 10px;
+  text-align: center;
+  border-radius: 14px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+  user-select: none;
+  border: 2px solid transparent;
+  transition: transform 0.1s;
+}
+.answer-btn:active { transform: scale(0.96); }
+.reject {
+  background: var(--red-bg);
+  color: var(--red);
+  border-color: #f9b8b8;
+}
+.accept {
+  background: var(--green-bg);
+  color: var(--green);
+  border-color: #a8edca;
+}
+
+/* ── FEEDBACK ── */
+#feedback { padding: 32px 20px 24px; }
+
+#fb-content { margin-top: 20px; }
+
+.fb-points {
+  font-size: 72px;
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 20px;
+}
+.pts-correct { color: var(--green); }
+.pts-wrong   { color: var(--red); }
+
+.concept-chip {
+  display: inline-block;
+  background: var(--black);
+  color: #fff;
+  padding: 7px 18px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 18px;
+  letter-spacing: 0.3px;
+}
+
+.fb-explanation {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #333;
+  font-weight: 400;
+}
+
+/* ── LEVEL END ── */
+#l1end, #l2end {
+  padding: 40px 20px 24px;
+  text-align: center;
+}
+.level-done-label {
+  font-size: 12px;
+  color: #aaa;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+.final-score {
+  font-size: 80px;
+  font-weight: 800;
+  color: var(--magenta);
+  line-height: 1;
+}
+.pts-sub {
+  font-size: 18px;
+  color: #aaa;
+  margin-top: 8px;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+.score-breakdown {
+  font-size: 13px;
+  color: #bbb;
+}
+
+/* ── LEVEL 2 ── */
+#level2-top { flex-shrink: 0; }
+
+.headline-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  border-top: 1.5px solid #eee;
+  border-bottom: 1.5px solid #eee;
+}
+
+.headline-item {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  background: #f0f0f0;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  top: -80px;
+  transition: background 0.25s, border-color 0.25s;
+}
+
+.headline-item.active-headline {
+  border-color: var(--magenta);
+  background: #fff0fa;
+}
+
+.active-label {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--magenta);
+  margin-bottom: 4px;
+}
+
+.headline-item.is-correct {
+  background: var(--green-bg);
+  border-color: var(--green);
+}
+.headline-item.is-wrong {
+  background: var(--grey-bg);
+  border-color: var(--grey);
+}
+.headline-item.is-missed {
+  background: var(--red-bg);
+  border-color: var(--red);
+}
+
+.l2-btns {
+  flex-shrink: 0;
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px 16px;
+  background: #f5f5f5;
+}
+.l2-btn {
+  flex: 1;
+  padding: 14px 4px;
+  text-align: center;
+  border-radius: 12px;
+  background: var(--black);
+  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  letter-spacing: 0.3px;
+  line-height: 1.3;
+  transition: background 0.1s, transform 0.1s;
+}
+.l2-btn:active {
+  background: var(--magenta);
+  transform: scale(0.96);
+}
+
+/* ── LEVEL 3 ── */
+
+.scale-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 6px 0 10px;
+  user-select: none;
+}
+
+.scale-beam {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  width: 88%;
+  transform-origin: center bottom;
+  transition: transform 0.5s cubic-bezier(.34,1.56,.64,1);
+}
+
+.scale-pan {
+  flex: 1;
+  height: 10px;
+  border-radius: 6px 6px 0 0;
+  background: #ddd;
+  transition: background 0.3s;
+}
+.scale-pan.correct { background: var(--green); }
+.scale-pan.wrong   { background: var(--red); }
+
+.scale-center {
+  font-size: 22px;
+  padding: 0 6px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.scale-post {
+  width: 3px;
+  height: 18px;
+  background: #bbb;
+  border-radius: 2px;
+  margin-top: 0;
+}
+
+/* Draggable card */
+.l3-card {
+  background: #fff;
+  border: 2.5px solid var(--black);
+  border-radius: 16px;
+  padding: 20px 18px;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.4;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  position: relative;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+.l3-card:active { cursor: grabbing; }
+.l3-card.dragging {
+  box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+  transform: scale(1.03) rotate(1.5deg);
+  z-index: 999;
+}
+
+/* Drop zones */
+.l3-drop-row {
+  display: flex;
+  gap: 8px;
+  padding: 0 12px 20px;
+}
+
+.l3-drop {
+  flex: 1;
+  background: #fff;
+  border: 2px dashed #ccc;
+  border-radius: 14px;
+  padding: 14px 6px;
+  text-align: center;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: default;
+}
+.l3-drop.drag-over {
+  border-color: var(--magenta);
+  background: #fff0fa;
+}
+.l3-drop.correct-drop {
+  border-color: var(--green);
+  background: var(--green-bg);
+}
+.l3-drop.wrong-drop {
+  border-color: var(--red);
+  background: var(--red-bg);
+}
+
+.drop-icon  { font-size: 20px; margin-bottom: 4px; }
+.drop-label { font-size: 11px; font-weight: 800; color: #444; text-transform: uppercase; letter-spacing: 0.5px; }
+.drop-sub   { font-size: 10px; color: #aaa; font-weight: 600; margin-top: 2px; }
+
+/* L3 feedback flash */
+.l3-fb {
+  text-align: center;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  min-height: 32px;
+  color: transparent;
+  transition: color 0.2s;
+}
+.l3-fb.show { color: var(--black); }
+
+/* ── WACHTSCHERM ── */
+.wait-screen { padding: 28px 20px 24px; display: flex; flex-direction: column; min-height: 100vh; }
+.wait-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #aaa; margin-bottom: 6px; }
+.wait-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+.wait-score-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 24px; }
+.wait-score-big { font-size: 52px; font-weight: 900; color: var(--magenta); line-height: 1; }
+.wait-score-sub { font-size: 15px; color: #aaa; font-weight: 600; }
+.wait-divider { height: 1.5px; background: #e8e8e8; border-radius: 99px; margin-bottom: 22px; }
+
+.rebus-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #aaa; margin-bottom: 10px; }
+.rebus-hint { font-size: 13px; color: #888; font-weight: 600; margin-bottom: 16px; line-height: 1.5; }
+.rebus-emojis { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.rebus-emoji { font-size: 34px; line-height: 1; }
+.rebus-op { font-size: 20px; font-weight: 800; color: #ccc; }
+
+.letter-slots { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 20px; }
+.letter-slot {
+  width: 32px; height: 40px;
+  border-bottom: 3px solid var(--black);
+  display: flex; align-items: flex-end; justify-content: center;
+  font-size: 17px; font-weight: 800; padding-bottom: 3px;
+  color: var(--black); transition: border-color 0.2s; cursor: pointer;
+}
+.letter-slot.filled  { border-color: var(--magenta); }
+.letter-slot.correct-slot { border-color: var(--green); color: var(--green); }
+.letter-slot.wrong-slot   { border-color: var(--red); animation: shake 0.3s ease; }
+.slot-space { width: 10px; }
+
+@keyframes shake {
+  0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-5px); } 75%{ transform:translateX(5px); }
+}
+
+.letter-pool { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 20px; }
+.letter-tile {
+  width: 38px; height: 42px;
+  background: #fff; border: 2px solid #ddd; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 800; cursor: pointer;
+  transition: background 0.1s, border-color 0.15s, transform 0.1s, opacity 0.15s;
+  user-select: none;
+}
+.letter-tile:active { transform: scale(0.92); }
+.letter-tile.used   { opacity: 0.2; pointer-events: none; }
+.letter-tile.tile-correct { background: var(--green-bg); border-color: var(--green); }
+
+.rebus-solved { display: none; background: var(--green-bg); border: 2px solid var(--green); border-radius: 14px; padding: 14px 16px; font-size: 14px; font-weight: 700; color: var(--green); margin-bottom: 16px; text-align: center; }
+.rebus-solved.show { display: block; }
+
+.wait-status { margin-top: auto; text-align: center; padding: 16px 0 4px; }
+.wait-dot-row { display: flex; justify-content: center; gap: 7px; margin-bottom: 10px; }
+.wait-dot { width: 8px; height: 8px; background: #ddd; border-radius: 50%; animation: waitPulse 1.4s infinite; }
+.wait-dot:nth-child(2) { animation-delay: 0.2s; }
+.wait-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes waitPulse { 0%,100%{ background:#ddd; } 50%{ background:var(--magenta); } }
+.wait-status-text { font-size: 12px; color: #bbb; font-weight: 600; }
+
+.teacher-unlock { display: none; background: var(--black); color: #fff; padding: 14px; border-radius: 12px; text-align: center; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 12px; }
+.teacher-unlock.visible { display: block; }
+
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<!-- ───────────── HOME ───────────── -->
+<div id="home" class="screen active">
+
+  <div class="logo">Polis<span class="logo-accent">Play</span></div>
+  <div class="tagline">Politiek leren door te doen</div>
+
+  <div class="avatar-badge">
+    <div class="avatar-dot"></div>
+    <span id="avatarDisplay">Laden…</span>
+  </div>
+
+  <div class="rule-list">
+    <div class="rule-item">
+      <div class="rule-icon icon-reject">👈</div>
+      <span>Weigeren — dit wil je niet in jouw land</span>
+    </div>
+    <div class="rule-item">
+      <div class="rule-icon icon-accept">👉</div>
+      <span>Aannemen — dit past in een democratische rechtsstaat</span>
+    </div>
+  </div>
+
+  <div class="btn" onclick="startLevel1()">Start Level 1 →</div>
+
+</div>
+
+<!-- ───────────── LEVEL 1 ───────────── -->
+<div id="level1" class="screen">
+
+  <div class="meta-row">
+    <div class="player-name" id="l1Name"></div>
+    <div id="l1Progress" style="font-size:13px; font-weight:600;"></div>
+    <div class="score-display" id="l1Score"></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="l1Bar"></div></div>
+
+  <div class="card-wrap">
+    <div id="cardContainer"></div>
+    <div class="swipe-labels">
+      <span>← Weigeren</span>
+      <span>Aannemen →</span>
+    </div>
+  </div>
+
+  <div class="answer-row">
+    <div class="answer-btn reject" onclick="handleChoice(false)">Weigeren</div>
+    <div class="answer-btn accept" onclick="handleChoice(true)">Aannemen</div>
+  </div>
+
+</div>
+
+<!-- ───────────── FEEDBACK ───────────── -->
+<div id="feedback" class="screen padded">
+
+  <div id="fb-content">
+    <div class="fb-points" id="fb-pts"></div>
+    <div class="concept-chip" id="fb-concept"></div>
+    <p class="fb-explanation" id="fb-text"></p>
+    <div class="btn" onclick="nextCard()" style="margin-top:36px;">Verder →</div>
+  </div>
+
+</div>
+
+<!-- ───────────── WACHT 1 (na Level 1) ───────────── -->
+<div id="l1end" class="screen wait-screen">
+
+  <div class="wait-label">Level 1 afgerond</div>
+  <div class="wait-title">Jouw score</div>
+  <div class="wait-score-row">
+    <div class="wait-score-big" id="l1FinalScore"></div>
+    <div class="wait-score-sub" id="l1Breakdown"></div>
+  </div>
+
+  <div class="wait-divider"></div>
+
+  <div class="rebus-label">Puzzel — wacht op de docent</div>
+  <div class="rebus-hint" id="rb1-hint"></div>
+  <div class="rebus-emojis" id="rb1-emojis"></div>
+  <div class="letter-slots" id="rb1-slots"></div>
+  <div class="letter-pool"  id="rb1-pool"></div>
+  <div class="rebus-solved" id="rb1-solved">Goed! Klaar voor het volgende level.</div>
+
+  <div class="wait-status">
+    <div class="wait-dot-row">
+      <div class="wait-dot"></div>
+      <div class="wait-dot"></div>
+      <div class="wait-dot"></div>
+    </div>
+    <div class="wait-status-text">Wachten op de docent…</div>
+    <div class="teacher-unlock" id="unlock1" onclick="startLevel2()">▶ Docent: start Level 2</div>
+  </div>
+
+</div>
+
+<!-- ───────────── LEVEL 2 ───────────── -->
+<div id="level2" class="screen">
+
+  <div id="level2-top">
+    <div class="meta-row">
+      <div class="player-name" id="l2Name"></div>
+      <div id="l2Progress" style="font-size:13px; font-weight:600;"></div>
+      <div class="score-display" id="l2Score"></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="l2Bar"></div></div>
+    <div style="padding: 0 16px 10px; font-size:12px; color:#888; font-weight:600; line-height:1.4;">
+      Jij bent hoofdredacteur. Berichten stromen binnen. Sorteer ze naar het juiste domein van jouw land.
+    </div>
+  </div>
+
+  <div class="headline-area" id="headlineArea"></div>
+
+  <div class="l2-btns">
+    <div class="l2-btn" onclick="answerL2('Democratie')">Democratie</div>
+    <div class="l2-btn" onclick="answerL2('Rechtsstaat')">Rechtsstaat</div>
+    <div class="l2-btn" onclick="answerL2('Grondwet')">Grondwet</div>
+  </div>
+
+</div>
+
+<!-- ───────────── WACHT 2 (na Level 2) ───────────── -->
+<div id="l2end" class="screen wait-screen">
+
+  <div class="wait-label">Level 2 afgerond</div>
+  <div class="wait-title">Jouw score</div>
+  <div class="wait-score-row">
+    <div class="wait-score-big" id="l2FinalScore"></div>
+    <div class="wait-score-sub" id="l2Breakdown"></div>
+  </div>
+
+  <div class="wait-divider"></div>
+
+  <div class="rebus-label">Puzzel — wacht op de docent</div>
+  <div class="rebus-hint" id="rb2-hint"></div>
+  <div class="rebus-emojis" id="rb2-emojis"></div>
+  <div class="letter-slots" id="rb2-slots"></div>
+  <div class="letter-pool"  id="rb2-pool"></div>
+  <div class="rebus-solved" id="rb2-solved">Goed! Klaar voor het volgende level.</div>
+
+  <div class="wait-status">
+    <div class="wait-dot-row">
+      <div class="wait-dot"></div>
+      <div class="wait-dot"></div>
+      <div class="wait-dot"></div>
+    </div>
+    <div class="wait-status-text">Wachten op de docent…</div>
+    <div class="teacher-unlock" id="unlock2" onclick="startLevel3()">▶ Docent: start Level 3</div>
+  </div>
+
+</div>
+
+<!-- ───────────── LEVEL 3 ───────────── -->
+<div id="level3" class="screen">
+
+  <div class="meta-row">
+    <div class="player-name" id="l3Name"></div>
+    <div id="l3Progress" style="font-size:13px;font-weight:600;"></div>
+    <div class="score-display" id="l3Score"></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="l3Bar"></div></div>
+
+  <div style="padding:4px 16px 6px;font-size:12px;color:#888;font-weight:600;line-height:1.4;">
+    Jij bepaalt wie wat mag in jouw land. Sleep elke bevoegdheid naar de juiste macht.
+  </div>
+
+  <!-- Weegschaal -->
+  <div class="scale-wrap">
+    <div class="scale-beam" id="scaleBeam">
+      <div class="scale-pan left" id="scalePanL"></div>
+      <div class="scale-center">⚖️</div>
+      <div class="scale-pan right" id="scalePanR"></div>
+    </div>
+    <div class="scale-post"></div>
+  </div>
+
+  <!-- Te slepen kaart -->
+  <div style="padding:0 16px;margin-bottom:8px;">
+    <div id="l3CardArea"></div>
+  </div>
+
+  <!-- Bakken -->
+  <div class="l3-drop-row">
+    <div class="l3-drop" id="drop-Wetgevend" data-bucket="Wetgevend"
+         ondragover="dragOver(event)" ondrop="dropCard(event)"
+         ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+      <div class="drop-icon">📜</div>
+      <div class="drop-label">Wetgevend</div>
+      <div class="drop-sub">Kamer &amp; wetten</div>
+    </div>
+    <div class="l3-drop" id="drop-Uitvoerend" data-bucket="Uitvoerend"
+         ondragover="dragOver(event)" ondrop="dropCard(event)"
+         ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+      <div class="drop-icon">⚙️</div>
+      <div class="drop-label">Uitvoerend</div>
+      <div class="drop-sub">Kabinet &amp; beleid</div>
+    </div>
+    <div class="l3-drop" id="drop-Rechterlijk" data-bucket="Rechterlijk"
+         ondragover="dragOver(event)" ondrop="dropCard(event)"
+         ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+      <div class="drop-icon">🔨</div>
+      <div class="drop-label">Rechterlijk</div>
+      <div class="drop-sub">Rechter &amp; recht</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ───────────── LEVEL 3 END ───────────── -->
+<div id="l3end" class="screen">
+  <div style="padding:40px 20px 24px;text-align:center;">
+    <div class="level-done-label">Klaar!</div>
+    <div class="final-score" id="l3FinalScore"></div>
+    <div class="pts-sub">punten totaal</div>
+    <div class="score-breakdown" id="l3Breakdown"></div>
+    <div class="btn" onclick="restartGame()" style="margin-top:48px;">Opnieuw spelen</div>
+  </div>
+</div>
+
+</div><!-- end .app -->
+
+<script>
+
+/* ================================================
+   DIERENNAMEN
+   ================================================ */
+
+const ANIMALS = [
+  "De Onafhankelijke Otter",
+  "De Kritische Kat",
+  "De Dappere Das",
+  "De Slimme Vos",
+  "De Rustige Uil",
+  "De Sterke Bever",
+  "De Snelle Haas",
+  "De Scherpe Havik",
+  "De Nieuwsgierige Nerts",
+  "De Eerlijke Eend",
+  "De Vastberaden Valk",
+  "De Bedachtzame Beer"
+];
+
+/* ================================================
+   CONTENT
+   ================================================ */
+
+const GAME_CONTENT = {
+
+  level1: [
+    {
+      t: "Iedereen mag stemmen vanaf 18 jaar",
+      c: true,
+      concept: "Democratie",
+      ex: "In een democratie heeft het volk invloed op politieke besluiten. Stemrecht is daarvoor essentieel."
+    },
+    {
+      t: "De leider blijft altijd aan de macht",
+      c: false,
+      concept: "Democratie",
+      ex: "In een democratie worden leiders vervangen via vrije verkiezingen. Geen enkele leider is onaantastbaar."
+    },
+    {
+      t: "Rechters zijn onafhankelijk van de regering",
+      c: true,
+      concept: "Trias politica",
+      ex: "De macht is verdeeld over drie organen. De rechter moet zelfstandig kunnen oordelen, zonder politieke druk."
+    },
+    {
+      t: "Politie mag zonder reden huizen doorzoeken",
+      c: false,
+      concept: "Grondwet",
+      ex: "De grondwet beschermt burgers tegen willekeurig ingrijpen. De politie heeft toestemming van een rechter nodig."
+    },
+    {
+      t: "Iedereen is gelijk voor de wet",
+      c: true,
+      concept: "Rechtsstaat",
+      ex: "In een rechtsstaat gelden dezelfde regels voor iedereen — ook voor de overheid zelf."
+    },
+    {
+      t: "De minister-president mag wetten zelf goedkeuren",
+      c: false,
+      concept: "Trias politica",
+      ex: "Wetten worden gemaakt en goedgekeurd door het parlement. De uitvoerende macht voert ze daarna uit."
+    },
+    {
+      t: "Burgers hebben recht op vrije meningsuiting",
+      c: true,
+      concept: "Grondrechten",
+      ex: "Dit grondrecht staat in artikel 7 van de Nederlandse grondwet."
+    },
+    {
+      t: "In een dictatuur mogen burgers vrij stemmen",
+      c: false,
+      concept: "Democratie",
+      ex: "In een dictatuur heeft één persoon of groep alle macht. Vrije verkiezingen bestaan niet."
+    },
+    {
+      t: "De Tweede Kamer controleert de regering",
+      c: true,
+      concept: "Trias politica",
+      ex: "Dit is de controlerende taak van de wetgevende macht over de uitvoerende macht."
+    },
+    {
+      t: "Een coalitie heeft altijd een meerderheid in de Kamer",
+      c: true,
+      concept: "Coalitie",
+      ex: "Zonder meerderheid van stemmen kun je niet regeren. Coalitievorming is daarom noodzakelijk."
+    },
+    {
+      t: "De grondwet kan zomaar door één minister worden aangepast",
+      c: false,
+      concept: "Grondwet",
+      ex: "Een grondwetswijziging vereist een tweederde meerderheid en twee parlementaire rondes. Dat is bewust zo."
+    },
+    {
+      t: "Oppositiepartijen zitten in de regeringscoalitie",
+      c: false,
+      concept: "Oppositie",
+      ex: "Oppositiepartijen zitten juist niet in de regering. Ze controleren en bekritiseren het beleid."
+    },
+    {
+      t: "In een rechtsstaat gelden de regels ook voor de overheid",
+      c: true,
+      concept: "Rechtsstaat",
+      ex: "Geen enkele instelling staat boven de wet. Dat is de kern van de rechtsstaat."
+    },
+    {
+      t: "Een aangenomen motie van wantrouwen laat een minister aftreden",
+      c: true,
+      concept: "Democratie",
+      ex: "Zo controleert de Tweede Kamer de uitvoerende macht. Een klassiek democratisch mechanisme."
+    },
+    {
+      t: "De rechter voert wetten uit",
+      c: false,
+      concept: "Trias politica",
+      ex: "Het kabinet voert wetten uit. De rechter beoordeelt of ze correct worden toegepast. Dat zijn twee aparte functies."
+    },
+    {
+      t: "Burgers mogen hun geloof zelf kiezen",
+      c: true,
+      concept: "Grondrechten",
+      ex: "Godsdienstvrijheid staat in artikel 6 van de grondwet. De overheid mag dit recht niet inperken."
+    },
+    {
+      t: "De Eerste Kamer mag wetten aanpassen en indienen",
+      c: false,
+      concept: "Trias politica",
+      ex: "De Eerste Kamer keurt wetten alleen goed of af. Aanpassen en indienen doet de Tweede Kamer."
+    },
+    {
+      t: "Bij een coalitie werken meerdere partijen samen om te regeren",
+      c: true,
+      concept: "Coalitie",
+      ex: "Partijen die samen een meerderheid vormen in de Kamer, werken samen in een coalitie."
+    },
+    {
+      t: "De grondwet is de hoogste wet van Nederland",
+      c: true,
+      concept: "Grondwet",
+      ex: "Alle andere wetten moeten in overeenstemming zijn met de grondwet. Zij is de basis van de rechtsstaat."
+    },
+    {
+      t: "In een democratie beslist één persoon alles",
+      c: false,
+      concept: "Democratie",
+      ex: "In een democratie heeft het volk invloed en zijn er meerdere machten die elkaar controleren."
+    }
+  ],
+
+  level2: [
+    { t: "Kabinet valt na meningsverschil over asielwet — nieuwe verkiezingen in zicht", cat: "Democratie" },
+    { t: "Rechter verbiedt overheid uitvoering omstreden maatregel", cat: "Rechtsstaat" },
+    { t: "Raad van State: nieuwe veiligheidswet mogelijk in strijd met grondwet", cat: "Grondwet" },
+    { t: "Ruim 79 procent van de kiezers gaat vandaag naar de stembus", cat: "Democratie" },
+    { t: "Hof: politie handelde onrechtmatig bij arrestatie demonstrant", cat: "Rechtsstaat" },
+    { t: "Minister: 'Wij raken niet aan artikel 1 van de grondwet'", cat: "Grondwet" },
+    { t: "Tweede Kamer verwerpt voorstel minister met grote meerderheid", cat: "Democratie" },
+    { t: "Staat aansprakelijk gesteld voor schade door falend overheidsbeleid", cat: "Rechtsstaat" },
+    { t: "Commissie waarschuwt voor inperking vrijheid van meningsuiting op internet", cat: "Grondwet" },
+    { t: "Motie van wantrouwen tegen staatssecretaris aangenomen — aftreden onvermijdelijk", cat: "Democratie" },
+    { t: "Rechtbank: uitwijzing vluchteling was in strijd met de wet", cat: "Rechtsstaat" },
+    { t: "Experts: privacywet tast grondwettelijk recht op bescherming persoonsgegevens aan", cat: "Grondwet" },
+    { t: "Coalitie presenteert regeerakkoord na vier maanden onderhandelen", cat: "Democratie" },
+    { t: "Verdachte vrijgesproken: bewijs onrechtmatig verkregen door recherche", cat: "Rechtsstaat" },
+    { t: "Grondwetswijziging aangenomen: sociale rechten voor alle burgers uitgebreid", cat: "Grondwet" },
+    { t: "Oppositie eist spoeddebat over uitgelekte begrotingsplannen", cat: "Democratie" },
+    { t: "Hoogste rechter fluit minister terug over schending privacy burgers", cat: "Rechtsstaat" },
+    { t: "Godsdienstvrijheid onder druk: debat in parlement laait op", cat: "Grondwet" },
+    { t: "Historisch lage opkomst bij gemeenteraadsverkiezingen baart zorgen", cat: "Democratie" },
+    { t: "Rechter: willekeurig fouilleren door politie wettelijk niet toegestaan", cat: "Rechtsstaat" },
+    { t: "Artikel 1 van de grondwet: gelijkheid als basis van de samenleving", cat: "Grondwet" },
+    { t: "Premier kondigt aftreden aan na verlies vertrouwen in de Kamer", cat: "Democratie" },
+    { t: "Overheid moet compensatie betalen aan tienduizenden gedupeerde gezinnen", cat: "Rechtsstaat" },
+    { t: "Recht op onderwijs staat in de grondwet — maar geldt het voor iedereen?", cat: "Grondwet" },
+    { t: "Burger wint referendum: omstreden bouwproject gaat definitief niet door", cat: "Democratie" },
+    { t: "Rechtbank legt dwangsom op aan overheid wegens te trage besluitvorming", cat: "Rechtsstaat" },
+    { t: "Grondwet verankert gelijkheid: discriminatie bij wet verboden", cat: "Grondwet" },
+    { t: "Tweede Kamer stemt in met miljardenplan voor onderwijs en zorg", cat: "Democratie" },
+    { t: "Hof bevestigt: iedereen heeft recht op een eerlijk proces, ook zonder geld", cat: "Rechtsstaat" },
+    { t: "Rechtbank toetst omstreden vreemdelingenwet aan grondwettelijke beginselen", cat: "Grondwet" }
+  ],
+
+  level3: [
+    { label: "Wetten maken",                    bucket: "Wetgevend" },
+    { label: "Wetten uitvoeren",                bucket: "Uitvoerend" },
+    { label: "Recht spreken",                   bucket: "Rechterlijk" },
+    { label: "Het kabinet controleren",          bucket: "Wetgevend" },
+    { label: "Beleid uitvoeren",                bucket: "Uitvoerend" },
+    { label: "Vonnissen wijzen",                bucket: "Rechterlijk" },
+    { label: "De begroting goedkeuren",         bucket: "Wetgevend" },
+    { label: "Wetten ondertekenen als minister",bucket: "Uitvoerend" },
+    { label: "De overheid toetsen aan de wet",  bucket: "Rechterlijk" },
+    { label: "Een motie indienen",              bucket: "Wetgevend" },
+    { label: "Ambassadeurs benoemen",           bucket: "Uitvoerend" },
+    { label: "Uitspraak doen in een rechtszaak",bucket: "Rechterlijk" },
+    { label: "Wetsvoorstellen beoordelen",      bucket: "Wetgevend" },
+    { label: "Belastinggeld verdelen",          bucket: "Uitvoerend" },
+    { label: "Burgers beschermen via de wet",   bucket: "Rechterlijk" },
+    { label: "De premier benoemen",             bucket: "Uitvoerend" },
+    { label: "Interpellaties houden in de Kamer", bucket: "Wetgevend" },
+    { label: "Bezwaarschriften behandelen",     bucket: "Rechterlijk" }
+  ]
+
+};
+
+/* ================================================
+   REBUSSEN
+   ================================================ */
+
+const REBUSES = [
+  {
+    id: "rb1",
+    hint: "De hoogste wet van het land. Alles staat hierin.",
+    emojis: ["🌍", "+", "💧"],
+    answer: "GRONDWET",
+    decoys: ["A", "B", "K", "S"]
+  },
+  {
+    id: "rb2",
+    hint: "Dit recht krijg je automatisch als je 18 wordt.",
+    emojis: ["🎙️", "+", "⚖️"],
+    answer: "STEMRECHT",
+    decoys: ["A", "K", "L", "O"]
+  }
+];
+
+/* ================================================
+   REBUS ENGINE
+   ================================================ */
+
+const rebusState = {
+  rb1: { filled: [], solved: false },
+  rb2: { filled: [], solved: false }
+};
+
+function buildRebus(rbId) {
+  const rb    = REBUSES.find(r => r.id === rbId);
+  const state = rebusState[rbId];
+  const word  = rb.answer;
+
+  // Reset state
+  state.filled  = Array(word.length).fill(null);
+  state.solved  = false;
+
+  // Emojis
+  const emojiEl = document.getElementById(rbId + "-emojis");
+  emojiEl.innerHTML = "";
+  rb.emojis.forEach(e => {
+    const span = document.createElement("span");
+    if (e === "+" || e === "=") {
+      span.className = "rebus-op";
+      span.innerText = e;
+    } else {
+      span.className = "rebus-emoji";
+      span.innerText = e;
+    }
+    emojiEl.appendChild(span);
+  });
+
+  // Vraagteken na de emojis
+  const eq   = document.createElement("span");
+  eq.className = "rebus-op";
+  eq.innerText = "= ?";
+  emojiEl.appendChild(eq);
+
+  // Hint
+  document.getElementById(rbId + "-hint").innerText = rb.hint;
+
+  // Letter slots
+  const slotsEl = document.getElementById(rbId + "-slots");
+  slotsEl.innerHTML = "";
+  word.split("").forEach((ch, i) => {
+    if (ch === " ") {
+      const sp = document.createElement("div");
+      sp.className = "slot-space";
+      slotsEl.appendChild(sp);
+      return;
+    }
+    const slot = document.createElement("div");
+    slot.className    = "letter-slot";
+    slot.dataset.idx  = i;
+    slot.dataset.rbid = rbId;
+    slot.onclick      = () => clearSlot(rbId, i);
+    slotsEl.appendChild(slot);
+  });
+
+  // Letter pool: letters uit het antwoord + lokvogels, geschud
+  const letters = word.replace(/ /g, "").split("").concat(rb.decoys);
+  letters.sort(() => Math.random() - 0.5);
+
+  const poolEl = document.getElementById(rbId + "-pool");
+  poolEl.innerHTML = "";
+  letters.forEach((letter, ti) => {
+    const tile = document.createElement("div");
+    tile.className      = "letter-tile";
+    tile.innerText      = letter;
+    tile.dataset.tileid = ti;
+    tile.dataset.rbid   = rbId;
+    tile.onclick        = () => pickLetter(rbId, letter, ti);
+    poolEl.appendChild(tile);
+  });
+
+  // Reset solved banner
+  document.getElementById(rbId + "-solved").classList.remove("show");
+}
+
+function pickLetter(rbId, letter, tileId) {
+  const rb    = REBUSES.find(r => r.id === rbId);
+  const state = rebusState[rbId];
+  if (state.solved) return;
+
+  // Find first empty slot
+  const emptyIdx = state.filled.findIndex(f => f === null);
+  if (emptyIdx === -1) return;
+
+  // Fill it
+  state.filled[emptyIdx] = { letter, tileId };
+
+  // Mark tile as used
+  const tile = document.querySelector(
+    `[data-tileid="${tileId}"][data-rbid="${rbId}"]`
+  );
+  if (tile) tile.classList.add("used");
+
+  // Update slot display
+  const slot = document.querySelector(
+    `.letter-slot[data-idx="${emptyIdx}"][data-rbid="${rbId}"]`
+  );
+  if (slot) {
+    slot.innerText = letter;
+    slot.classList.add("filled");
+    gsap.fromTo(slot, { y: -8, opacity: 0 }, { y: 0, opacity: 1, duration: 0.18 });
+  }
+
+  // Check answer if all slots filled
+  const wordNoSpaces = rb.answer.replace(/ /g, "");
+  if (state.filled.every(f => f !== null)) {
+    const attempt = state.filled.map(f => f.letter).join("");
+    if (attempt === wordNoSpaces) {
+      solveRebus(rbId);
+    } else {
+      shakeSlots(rbId);
+      setTimeout(() => resetRebus(rbId), 700);
+    }
+  }
+}
+
+function clearSlot(rbId, idx) {
+  const state = rebusState[rbId];
+  if (state.solved) return;
+  if (state.filled[idx] === null) return;
+
+  const tileId = state.filled[idx].tileId;
+  state.filled[idx] = null;
+
+  // Clear slot display
+  const slot = document.querySelector(
+    `.letter-slot[data-idx="${idx}"][data-rbid="${rbId}"]`
+  );
+  if (slot) {
+    slot.innerText = "";
+    slot.classList.remove("filled");
+  }
+
+  // Re-enable tile
+  const tile = document.querySelector(
+    `[data-tileid="${tileId}"][data-rbid="${rbId}"]`
+  );
+  if (tile) tile.classList.remove("used");
+}
+
+function shakeSlots(rbId) {
+  document.querySelectorAll(`.letter-slot[data-rbid="${rbId}"]`).forEach(s => {
+    s.classList.add("wrong-slot");
+    setTimeout(() => s.classList.remove("wrong-slot"), 400);
+  });
+}
+
+function resetRebus(rbId) {
+  const state = rebusState[rbId];
+  state.filled = state.filled.map(() => null);
+
+  document.querySelectorAll(`.letter-slot[data-rbid="${rbId}"]`).forEach(s => {
+    s.innerText = "";
+    s.classList.remove("filled", "correct-slot");
+  });
+  document.querySelectorAll(`.letter-tile[data-rbid="${rbId}"]`).forEach(t => {
+    t.classList.remove("used", "tile-correct");
+  });
+}
+
+function solveRebus(rbId) {
+  const state = rebusState[rbId];
+  state.solved = true;
+
+  document.querySelectorAll(`.letter-slot[data-rbid="${rbId}"]`).forEach(s => {
+    s.classList.add("correct-slot");
+  });
+  document.querySelectorAll(`.letter-tile[data-rbid="${rbId}"].used`).forEach(t => {
+    t.classList.add("tile-correct");
+  });
+
+  const solved = document.getElementById(rbId + "-solved");
+  solved.classList.add("show");
+  gsap.fromTo(solved, { y: 10, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3 });
+}
+
+
+
+const gameState = {
+  name: null,
+  l1: { index: 0, score: 0, correct: 0, current: null },
+  l2: {
+    queue:    [],
+    active:   [],
+    answered: 0,
+    correct:  0,
+    score:    0,
+    total:    0,
+    interval: null
+  }
+};
+
+/* ================================================
+   INIT
+   ================================================ */
+
+function init() {
+  gameState.name = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+  document.getElementById("avatarDisplay").innerText = gameState.name;
+}
+
+init();
+
+/* ================================================
+   NAV
+   ================================================ */
+
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+/* ================================================
+   LEVEL 1
+   ================================================ */
+
+let swipeStartX  = 0;
+let choiceLocked = false;
+
+function startLevel1() {
+  gameState.l1 = { index: 0, score: 0, correct: 0, current: null };
+  document.getElementById("l1Name").innerText = gameState.name;
+  show("level1");
+  loadCard();
+}
+
+function loadCard() {
+  choiceLocked = false;
+  const l1    = gameState.l1;
+  const total = GAME_CONTENT.level1.length;
+
+  if (l1.index >= total) {
+    document.getElementById("l1FinalScore").innerText = l1.score;
+    document.getElementById("l1Breakdown").innerText =
+      l1.correct + " van de " + total + " goed";
+    buildRebus("rb1");
+    show("l1end");
+    startTeacherTap("unlock1");
+    return;
+  }
+
+  const d  = GAME_CONTENT.level1[l1.index];
+  l1.current = d;
+
+  document.getElementById("l1Progress").innerText = (l1.index + 1) + "/" + total;
+  document.getElementById("l1Score").innerText     = l1.score + " pts";
+  document.getElementById("l1Bar").style.width     = (l1.index / total * 100) + "%";
+
+  const el = document.createElement("div");
+  el.className = "card";
+  el.innerText = d.t;
+
+  const container = document.getElementById("cardContainer");
+  container.innerHTML = "";
+  container.appendChild(el);
+
+  gsap.fromTo(el,
+    { y: 28, opacity: 0 },
+    { y: 0, opacity: 1, duration: 0.28, ease: "power2.out" }
+  );
+
+  // Mouse swipe
+  el.addEventListener("mousedown", e => { swipeStartX = e.clientX; });
+  el.addEventListener("mouseup", e => {
+    const diff = e.clientX - swipeStartX;
+    if (!choiceLocked && Math.abs(diff) > 55) {
+      choiceLocked = true;
+      handleChoice(diff > 0);
+    }
+  });
+
+  // Touch swipe
+  el.addEventListener("touchstart", e => {
+    swipeStartX = e.touches[0].clientX;
+  }, { passive: true });
+
+  el.addEventListener("touchend", e => {
+    const diff = e.changedTouches[0].clientX - swipeStartX;
+    if (!choiceLocked && Math.abs(diff) > 55) {
+      choiceLocked = true;
+      handleChoice(diff > 0);
+    }
+  });
+}
+
+function handleChoice(accepted) {
+  if (choiceLocked && !document.querySelector(".card")) return;
+  choiceLocked = true;
+
+  const d       = gameState.l1.current;
+  const correct = (accepted === d.c);
+
+  if (correct) {
+    gameState.l1.score += 50;
+    gameState.l1.correct++;
+  }
+
+  const card = document.querySelector(".card");
+  if (card) {
+    gsap.to(card, {
+      x:         accepted ? 320 : -320,
+      rotation:  accepted ? 18 : -18,
+      opacity:   0,
+      duration:  0.28,
+      ease:      "power2.in",
+      onComplete: () => renderFeedback(correct, d)
+    });
+  } else {
+    renderFeedback(correct, d);
+  }
+}
+
+function renderFeedback(correct, d) {
+  document.getElementById("fb-pts").innerHTML = correct
+    ? '<span class="pts-correct">+50 <small style="font-size:0.45em;font-weight:700;vertical-align:middle;">pnt</small></span>'
+    : '<span class="pts-wrong">0 <small style="font-size:0.45em;font-weight:700;vertical-align:middle;">pnt</small></span>';
+
+  document.getElementById("fb-concept").innerText = d.concept;
+  document.getElementById("fb-text").innerText    = d.ex;
+
+  show("feedback");
+
+  gsap.fromTo("#fb-content",
+    { y: 22, opacity: 0 },
+    { y: 0, opacity: 1, duration: 0.3, ease: "power2.out" }
+  );
+}
+
+function nextCard() {
+  gameState.l1.index++;
+  show("level1");
+  loadCard();
+}
+
+/* ================================================
+   LEVEL 2
+   ================================================ */
+
+function startLevel2() {
+  const l2 = gameState.l2;
+
+  if (l2.interval) clearInterval(l2.interval);
+
+  l2.queue    = pickL2Queue();
+  l2.active   = [];
+  l2.answered = 0;
+  l2.correct  = 0;
+  l2.score    = 0;
+  l2.total    = GAME_CONTENT.level2.length;
+
+  document.getElementById("headlineArea").innerHTML = "";
+  document.getElementById("l2Name").innerText = gameState.name;
+  updateL2UI();
+
+  show("level2");
+
+  // Spawn first immediately, then every 4 seconds
+  spawnHeadline();
+  l2.interval = setInterval(() => {
+    if (l2.queue.length > 0) {
+      spawnHeadline();
+    } else {
+      clearInterval(l2.interval);
+    }
+  }, 4000);
+}
+
+function spawnHeadline() {
+  const l2   = gameState.l2;
+  if (l2.queue.length === 0) return;
+
+  const item  = l2.queue.shift();
+  const area  = document.getElementById("headlineArea");
+  const areaH = area.clientHeight;
+
+  const el = document.createElement("div");
+  el.className = "headline-item";
+  el.innerText = item.t;
+  area.appendChild(el);
+
+  const obj = {
+    el,
+    cat:      item.cat,
+    answered: false,
+    missed:   false,
+    progress: 0,
+    tween:    null
+  };
+
+  l2.active.push(obj);
+  updateActiveHighlight();
+
+  const tween = gsap.to(el, {
+    y:        areaH + 90,
+    duration: 16,
+    ease:     "none",
+    onUpdate() {
+      obj.progress = this.progress();
+      updateActiveHighlight();
+    },
+    onComplete() {
+      if (!obj.answered) {
+        obj.missed = true;
+        el.classList.add("is-missed");
+        setTimeout(() => {
+          el.remove();
+          l2.active   = l2.active.filter(a => a !== obj);
+          l2.answered++;
+          updateL2UI();
+          updateActiveHighlight();
+          checkL2Done();
+        }, 500);
+      }
+    }
+  });
+
+  obj.tween = tween;
+}
+
+function updateActiveHighlight() {
+  const l2      = gameState.l2;
+  const pending = l2.active.filter(a => !a.answered && !a.missed);
+
+  // Clear all highlights
+  l2.active.forEach(a => {
+    a.el.classList.remove("active-headline");
+    const lbl = a.el.querySelector(".active-label");
+    if (lbl) lbl.remove();
+  });
+
+  if (pending.length === 0) return;
+
+  // The headline furthest along = the one with highest progress
+  pending.sort((a, b) => b.progress - a.progress);
+  const target = pending[0];
+  target.el.classList.add("active-headline");
+
+  const lbl       = document.createElement("div");
+  lbl.className   = "active-label";
+  lbl.innerText   = "▶ beantwoord dit";
+  target.el.prepend(lbl);
+}
+
+function answerL2(category) {
+  const l2      = gameState.l2;
+  const pending = l2.active.filter(a => !a.answered && !a.missed);
+  if (pending.length === 0) return;
+
+  pending.sort((a, b) => b.progress - a.progress);
+  const target = pending[0];
+
+  target.answered = true;
+  target.tween.pause();
+  target.el.classList.remove("active-headline");
+
+  const lbl = target.el.querySelector(".active-label");
+  if (lbl) lbl.remove();
+
+  const correct = (category === target.cat);
+  if (correct) {
+    l2.score += 50;
+    l2.correct++;
+    target.el.classList.add("is-correct");
+  } else {
+    target.el.classList.add("is-wrong");
+  }
+
+  l2.answered++;
+  updateL2UI();
+  updateActiveHighlight();
+
+  // Fade out after short pause
+  setTimeout(() => {
+    gsap.to(target.el, {
+      opacity:   0,
+      y:         "+=" + 24,
+      duration:  0.35,
+      onComplete: () => {
+        target.el.remove();
+        l2.active = l2.active.filter(a => a !== target);
+      }
+    });
+  }, 650);
+
+  checkL2Done();
+}
+
+function updateL2UI() {
+  const l2 = gameState.l2;
+  document.getElementById("l2Progress").innerText = l2.answered + "/" + l2.total;
+  document.getElementById("l2Score").innerText    = l2.score + " pts";
+  document.getElementById("l2Bar").style.width   = (l2.answered / l2.total * 100) + "%";
+}
+
+function checkL2Done() {
+  const l2 = gameState.l2;
+  if (l2.answered >= l2.total) {
+    clearInterval(l2.interval);
+    setTimeout(() => {
+      document.getElementById("l2FinalScore").innerText = l2.score;
+      document.getElementById("l2Breakdown").innerText  =
+        l2.correct + " van de " + l2.total + " goed";
+      buildRebus("rb2");
+      show("l2end");
+      startTeacherTap("unlock2");
+    }, 900);
+  }
+}
+
+/* ================================================
+   LEVEL 2 — fix: 20 uit 30
+   ================================================ */
+
+function pickL2Queue() {
+  const shuffled = [...GAME_CONTENT.level2].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 20);
+}
+
+/* ================================================
+   LEVEL 3 — TRIAS BALANS
+   ================================================ */
+
+const l3State = {
+  queue:   [],
+  index:   0,
+  score:   0,
+  correct: 0,
+  total:   0,
+  current: null,
+  // touch drag
+  dragEl:    null,
+  dragOriginX: 0,
+  dragOriginY: 0,
+  dragOffX:  0,
+  dragOffY:  0
+};
+
+function startLevel3() {
+  const s = l3State;
+  s.queue   = [...GAME_CONTENT.level3].sort(() => Math.random() - 0.5);
+  s.index   = 0;
+  s.score   = 0;
+  s.correct = 0;
+  s.total   = s.queue.length;
+
+  document.getElementById("l3Name").innerText = gameState.name;
+  resetScale();
+  updateL3UI();
+  show("level3");
+  loadL3Card();
+}
+
+function loadL3Card() {
+  const s    = l3State;
+  const area = document.getElementById("l3CardArea");
+  area.innerHTML = "";
+
+  // Remove feedback element if present
+  const oldFb = document.getElementById("l3-fb");
+  if (oldFb) oldFb.remove();
+
+  if (s.index >= s.total) {
+    const totalScore = gameState.l1.score + gameState.l2.score + s.score;
+    document.getElementById("l3FinalScore").innerText = totalScore;
+    document.getElementById("l3Breakdown").innerText  =
+      "L1: " + gameState.l1.score + " pnt  ·  L2: " + gameState.l2.score + " pnt  ·  L3: " + s.score + " pnt";
+    show("l3end");
+    return;
+  }
+
+  s.current = s.queue[s.index];
+  resetDropZones();
+  resetScale();
+
+  const card = document.createElement("div");
+  card.className  = "l3-card";
+  card.id         = "l3-drag-card";
+  card.draggable  = true;
+  card.innerText  = s.current.label;
+
+  // Mouse drag
+  card.addEventListener("dragstart", e => {
+    e.dataTransfer.setData("text/plain", "l3card");
+    setTimeout(() => card.classList.add("dragging"), 0);
+  });
+  card.addEventListener("dragend", () => card.classList.remove("dragging"));
+
+  // Touch drag
+  card.addEventListener("touchstart", touchStart, { passive: false });
+  card.addEventListener("touchmove",  touchMove,  { passive: false });
+  card.addEventListener("touchend",   touchEnd,   { passive: false });
+
+  area.appendChild(card);
+
+  gsap.fromTo(card,
+    { y: 16, opacity: 0 },
+    { y: 0, opacity: 1, duration: 0.25, ease: "power2.out" }
+  );
+}
+
+/* ── Touch drag handlers ── */
+
+function touchStart(e) {
+  e.preventDefault();
+  const t   = e.touches[0];
+  const el  = e.currentTarget;
+  const box = el.getBoundingClientRect();
+  l3State.dragEl      = el;
+  l3State.dragOffX    = t.clientX - box.left;
+  l3State.dragOffY    = t.clientY - box.top;
+  l3State.dragOriginX = box.left;
+  l3State.dragOriginY = box.top;
+
+  el.style.position  = "fixed";
+  el.style.zIndex    = "999";
+  el.style.width     = box.width + "px";
+  el.style.left      = box.left + "px";
+  el.style.top       = box.top  + "px";
+  el.classList.add("dragging");
+}
+
+function touchMove(e) {
+  e.preventDefault();
+  const t  = e.touches[0];
+  const el = l3State.dragEl;
+  if (!el) return;
+  el.style.left = (t.clientX - l3State.dragOffX) + "px";
+  el.style.top  = (t.clientY - l3State.dragOffY) + "px";
+
+  // Highlight drop zone under finger
+  el.style.display = "none";
+  const under = document.elementFromPoint(t.clientX, t.clientY);
+  el.style.display = "";
+  const zone = under ? under.closest(".l3-drop") : null;
+  document.querySelectorAll(".l3-drop").forEach(d => d.classList.remove("drag-over"));
+  if (zone) zone.classList.add("drag-over");
+}
+
+function touchEnd(e) {
+  const el = l3State.dragEl;
+  if (!el) return;
+  el.classList.remove("dragging");
+  el.style.position = "";
+  el.style.zIndex   = "";
+  el.style.width    = "";
+  el.style.left     = "";
+  el.style.top      = "";
+  l3State.dragEl    = null;
+
+  const t    = e.changedTouches[0];
+  el.style.display = "none";
+  const under = document.elementFromPoint(t.clientX, t.clientY);
+  el.style.display = "";
+  const zone  = under ? under.closest(".l3-drop") : null;
+
+  document.querySelectorAll(".l3-drop").forEach(d => d.classList.remove("drag-over"));
+
+  if (zone) {
+    handleL3Answer(zone.dataset.bucket);
+  } else {
+    gsap.fromTo(el,
+      { x: 0 },
+      { x: 0, duration: 0.3, ease: "elastic.out(1,0.5)" }
+    );
+  }
+}
+
+/* ── Drop zone mouse handlers ── */
+
+function dragOver(e)  { e.preventDefault(); }
+function dragEnter(e) { e.currentTarget.classList.add("drag-over"); }
+function dragLeave(e) { e.currentTarget.classList.remove("drag-over"); }
+
+function dropCard(e) {
+  e.preventDefault();
+  document.querySelectorAll(".l3-drop").forEach(d => d.classList.remove("drag-over"));
+  handleL3Answer(e.currentTarget.dataset.bucket);
+}
+
+/* ── Answer logic ── */
+
+function handleL3Answer(chosen) {
+  const s       = l3State;
+  const correct = chosen === s.current.bucket;
+
+  if (correct) {
+    s.score   += 50;
+    s.correct++;
+  }
+
+  s.index++;
+  updateL3UI();
+
+  // Visual feedback on drop zone
+  const zone = document.getElementById("drop-" + chosen);
+  zone.classList.add(correct ? "correct-drop" : "wrong-drop");
+
+  // Animate card out
+  const card = document.getElementById("l3-drag-card");
+  if (card) {
+    gsap.to(card, {
+      scale:    correct ? 1.08 : 0.88,
+      opacity:  0,
+      duration: 0.25,
+      ease:     "power2.in"
+    });
+  }
+
+  // Scale tilt: correct = level, wrong = tilts
+  animateScale(correct, chosen);
+
+  // Show inline feedback
+  showL3Feedback(correct, s.current.bucket, chosen);
+
+  setTimeout(() => {
+    resetDropZones();
+    loadL3Card();
+  }, 1400);
+}
+
+function showL3Feedback(correct, rightBucket, chosen) {
+  const area = document.getElementById("l3CardArea");
+  const fb   = document.createElement("div");
+  fb.id        = "l3-fb";
+  fb.className = "l3-fb";
+  fb.innerText = correct
+    ? "Goed! Dit hoort bij: " + rightBucket
+    : chosen + " is niet correct. Het hoort bij: " + rightBucket;
+  fb.style.color = correct ? "var(--green)" : "var(--red)";
+  fb.style.paddingTop = "12px";
+  area.appendChild(fb);
+  gsap.fromTo(fb, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.2 });
+}
+
+function updateL3UI() {
+  const s = l3State;
+  document.getElementById("l3Progress").innerText = s.index + "/" + s.total;
+  document.getElementById("l3Score").innerText    = s.score + " pts";
+  document.getElementById("l3Bar").style.width   = (s.index / s.total * 100) + "%";
+}
+
+function resetDropZones() {
+  document.querySelectorAll(".l3-drop").forEach(d => {
+    d.classList.remove("drag-over", "correct-drop", "wrong-drop");
+  });
+}
+
+function resetScale() {
+  gsap.to("#scaleBeam", { rotation: 0, duration: 0.4, ease: "power2.out" });
+  document.getElementById("scalePanL").classList.remove("correct", "wrong");
+  document.getElementById("scalePanR").classList.remove("correct", "wrong");
+}
+
+function animateScale(correct, chosen) {
+  const beam  = document.getElementById("scaleBeam");
+  const panL  = document.getElementById("scalePanL");
+  const panR  = document.getElementById("scalePanR");
+
+  if (correct) {
+    gsap.to(beam, { rotation: 0, duration: 0.5, ease: "elastic.out(1,0.6)" });
+    panL.classList.add("correct");
+    panR.classList.add("correct");
+  } else {
+    const tilt = (Math.random() > 0.5) ? 9 : -9;
+    gsap.to(beam, { rotation: tilt, duration: 0.5, ease: "elastic.out(1,0.6)" });
+    panL.classList.add("wrong");
+    panR.classList.add("wrong");
+  }
+}
+
+/* ================================================
+   DOCENT ONTGRENDELING
+   Vijf tikken op de wachtstatus-tekst onthult de knop.
+   ================================================ */
+
+const tapCounts = {};
+
+function startTeacherTap(unlockId) {
+  tapCounts[unlockId] = 0;
+  const statusText = document
+    .getElementById(unlockId)
+    .closest(".wait-status")
+    .querySelector(".wait-status-text");
+
+  statusText.onclick = () => {
+    tapCounts[unlockId] = (tapCounts[unlockId] || 0) + 1;
+    if (tapCounts[unlockId] >= 5) {
+      document.getElementById(unlockId).classList.add("visible");
+      statusText.onclick = null;
+    }
+  };
+}
+
+/* ================================================
+   RESTART
+   ================================================ */
+
+function restartGame() {
+  const l2 = gameState.l2;
+  if (l2.interval) clearInterval(l2.interval);
+
+  gameState.l1 = { index: 0, score: 0, correct: 0, current: null };
+  gameState.l2 = {
+    queue: [], active: [], answered: 0, correct: 0,
+    score: 0, total: 0, interval: null
+  };
+
+  l3State.queue   = [];
+  l3State.index   = 0;
+  l3State.score   = 0;
+  l3State.correct = 0;
+
+  gameState.name = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+  document.getElementById("avatarDisplay").innerText = gameState.name;
+
+  show("home");
+}
+
+</script>
+</body>
+</html>
