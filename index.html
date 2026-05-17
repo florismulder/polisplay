@@ -568,6 +568,41 @@ body {
 .teacher-unlock { display: none; background: var(--black); color: #fff; padding: 14px; border-radius: 12px; text-align: center; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 12px; }
 .teacher-unlock.visible { display: block; }
 
+/* ── DOCENT DASHBOARD ── */
+.d-stat-box {
+  flex: 1; background: #fff; border: 1.5px solid #eee;
+  border-radius: 14px; padding: 14px 8px; text-align: center;
+}
+.d-stat-num   { font-size: 32px; font-weight: 900; color: var(--magenta); line-height: 1; }
+.d-stat-label { font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+
+.d-level-btn {
+  flex: 1; background: var(--black); color: #fff;
+  padding: 14px 8px; border-radius: 12px; text-align: center;
+  font-size: 13px; font-weight: 800; cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.d-level-btn:active { transform: scale(0.96); }
+.d-level-btn:hover  { background: var(--magenta); }
+.d-reset-btn        { background: #999; }
+.d-reset-btn:hover  { background: var(--red); }
+
+.d-student-row {
+  display: flex; align-items: center; gap: 10px;
+  background: #fff; border: 1.5px solid #eee; border-radius: 12px;
+  padding: 12px 14px; margin-bottom: 8px;
+}
+.d-student-name  { flex: 1; font-size: 13px; font-weight: 700; }
+.d-student-level { font-size: 11px; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; }
+.d-student-score { font-size: 14px; font-weight: 900; color: var(--magenta); min-width: 52px; text-align: right; }
+.d-badge {
+  font-size: 10px; font-weight: 800; padding: 3px 8px;
+  border-radius: 99px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.badge-speelt { background: #fff3cc; color: #b38600; }
+.badge-wacht  { background: #e0e8ff; color: #3355cc; }
+.badge-klaar  { background: var(--green-bg); color: var(--green); }
+
 </style>
 </head>
 
@@ -575,7 +610,7 @@ body {
 <div class="app">
 
 <!-- ───────────── HOME ───────────── -->
-<div id="home" class="screen active">
+<div id="home" class="screen active" style="padding:32px 20px 24px;">
 
   <div class="logo">Polis<span class="logo-accent">Play</span></div>
   <div class="tagline">Politiek leren door te doen</div>
@@ -583,6 +618,12 @@ body {
   <div class="avatar-badge">
     <div class="avatar-dot"></div>
     <span id="avatarDisplay">Laden…</span>
+  </div>
+
+  <div style="background:#fff;border:1.5px solid #eee;border-radius:12px;padding:12px 16px;margin-bottom:16px;">
+    <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#bbb;margin-bottom:2px;">Sessie van vandaag</div>
+    <div style="font-size:14px;font-weight:800;color:var(--black);" id="home-sessie"></div>
+    <div style="font-size:11px;color:#aaa;font-weight:600;margin-top:2px;">Jouw scores gaan automatisch naar het docentdashboard.</div>
   </div>
 
   <div class="rule-list">
@@ -791,9 +832,184 @@ body {
   </div>
 </div>
 
+<!-- ───────────── DOCENT DASHBOARD ───────────── -->
+<div id="docent" class="screen">
+  <div style="padding:24px 20px 16px;">
+    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#aaa;margin-bottom:4px;">Docentweergave</div>
+    <div style="font-size:26px;font-weight:900;margin-bottom:2px;">Polis<span style="color:var(--magenta);">Play</span></div>
+    <div style="font-size:12px;color:#aaa;font-weight:600;" id="d-sessie"></div>
+  </div>
+
+  <div style="display:flex;gap:8px;padding:0 20px 16px;">
+    <div class="d-stat-box">
+      <div class="d-stat-num" id="d-count">0</div>
+      <div class="d-stat-label">verbonden</div>
+    </div>
+    <div class="d-stat-box">
+      <div class="d-stat-num" id="d-waiting">0</div>
+      <div class="d-stat-label">wachten</div>
+    </div>
+    <div class="d-stat-box">
+      <div class="d-stat-num" id="d-done">0</div>
+      <div class="d-stat-label">klaar</div>
+    </div>
+  </div>
+
+  <div style="padding:0 20px 12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#aaa;">Level starten</div>
+  <div style="display:flex;gap:8px;padding:0 20px 20px;">
+    <div class="d-level-btn" onclick="teacherStartLevel(2)">▶ Level 2</div>
+    <div class="d-level-btn" onclick="teacherStartLevel(3)">▶ Level 3</div>
+    <div class="d-level-btn d-reset-btn" onclick="teacherReset()">↺ Reset</div>
+  </div>
+
+  <div style="padding:0 20px 8px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#aaa;">Studenten</div>
+  <div id="d-student-list" style="padding:0 20px 32px;"></div>
+</div>
+
 </div><!-- end .app -->
 
 <script>
+
+/* ================================================
+   FIREBASE — REST API
+   ================================================ */
+
+const DB      = "https://schoolgames-voor-ma-default-rtdb.europe-west1.firebasedatabase.app";
+const GAME    = "polisplay";
+const SESSION = new Date().toISOString().slice(0, 10).replace(/-/g, ""); // bijv. 20260517
+
+let unlockSource = null; // actieve EventSource voor level-unlock
+
+function dbPath(path) {
+  return `${DB}/${GAME}/${SESSION}/${path}.json`;
+}
+
+async function dbSet(path, data) {
+  try {
+    await fetch(dbPath(path), {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+  } catch(e) { console.warn("DB schrijffout:", e); }
+}
+
+async function dbGet(path) {
+  try {
+    const r = await fetch(dbPath(path));
+    return await r.json();
+  } catch(e) { return null; }
+}
+
+function dbListen(path, callback) {
+  const src = new EventSource(dbPath(path));
+  src.addEventListener("put", e => {
+    try {
+      const payload = JSON.parse(e.data);
+      callback(payload.data);
+    } catch(_) {}
+  });
+  src.onerror = () => {}; // stil falen
+  return src;
+}
+
+function studentKey() {
+  return gameState.name.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "");
+}
+
+async function dbUpdateStudent(level, score, status) {
+  await dbSet("studenten/" + studentKey(), {
+    naam:   gameState.name,
+    level,
+    score,
+    status,
+    ts:     Date.now()
+  });
+}
+
+function listenForLevel(targetLevel, callback) {
+  if (unlockSource) { unlockSource.close(); unlockSource = null; }
+  unlockSource = dbListen("huidigLevel", (val) => {
+    if (val !== null && val >= targetLevel) {
+      if (unlockSource) { unlockSource.close(); unlockSource = null; }
+      callback();
+    }
+  });
+}
+
+/* ================================================
+   DOCENT FUNCTIES
+   ================================================ */
+
+async function teacherStartLevel(level) {
+  await dbSet("huidigLevel", level);
+  document.querySelectorAll(".d-level-btn").forEach(b => {
+    b.style.background = "";
+  });
+}
+
+async function teacherReset() {
+  if (!confirm("Sessie wissen? Alle scores verdwijnen.")) return;
+  await dbSet("studenten", null);
+  await dbSet("huidigLevel", 1);
+  document.getElementById("d-student-list").innerHTML = "";
+  document.getElementById("d-count").innerText   = "0";
+  document.getElementById("d-waiting").innerText = "0";
+  document.getElementById("d-done").innerText    = "0";
+}
+
+function startDocentMode() {
+  const today = new Date().toLocaleDateString("nl-NL", { weekday:"long", day:"numeric", month:"long" });
+  document.getElementById("d-sessie").innerText = "Sessie " + today;
+  show("docent");
+
+  dbListen("studenten", (data) => {
+    renderStudentList(data || {});
+  });
+}
+
+function renderStudentList(data) {
+  const list = document.getElementById("d-student-list");
+  list.innerHTML = "";
+
+  if (!data || typeof data !== "object") {
+    list.innerHTML = '<div style="color:#bbb;font-size:13px;text-align:center;padding:20px 0;">Nog geen studenten verbonden.</div>';
+    document.getElementById("d-count").innerText   = "0";
+    document.getElementById("d-waiting").innerText = "0";
+    document.getElementById("d-done").innerText    = "0";
+    return;
+  }
+
+  const students = Object.values(data);
+  const waiting  = students.filter(s => s.status === "wacht").length;
+  const done     = students.filter(s => s.status === "klaar").length;
+
+  document.getElementById("d-count").innerText   = students.length;
+  document.getElementById("d-waiting").innerText = waiting;
+  document.getElementById("d-done").innerText    = done;
+
+  students
+    .sort((a, b) => b.score - a.score)
+    .forEach(s => {
+      const row = document.createElement("div");
+      row.className = "d-student-row";
+
+      const badgeClass = s.status === "wacht" ? "badge-wacht"
+                       : s.status === "klaar" ? "badge-klaar"
+                       : "badge-speelt";
+      const badgeText  = s.status === "wacht" ? "wacht"
+                       : s.status === "klaar" ? "klaar"
+                       : "speelt";
+
+      row.innerHTML = `
+        <div class="d-student-name">${s.naam}</div>
+        <div class="d-student-level">L${s.level}</div>
+        <span class="d-badge ${badgeClass}">${badgeText}</span>
+        <div class="d-student-score">${s.score} pnt</div>
+      `;
+      list.appendChild(row);
+    });
+}
 
 /* ================================================
    DIERENNAMEN
@@ -1224,6 +1440,16 @@ const gameState = {
 function init() {
   gameState.name = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
   document.getElementById("avatarDisplay").innerText = gameState.name;
+
+  // Sessiedatum tonen
+  const today = new Date().toLocaleDateString("nl-NL", { weekday:"long", day:"numeric", month:"long" });
+  const sessieEl = document.getElementById("home-sessie");
+  if (sessieEl) sessieEl.innerText = today.charAt(0).toUpperCase() + today.slice(1);
+
+  // Docentmodus via URL-parameter ?docent
+  if (window.location.search.includes("docent")) {
+    startDocentMode();
+  }
 }
 
 init();
@@ -1247,6 +1473,10 @@ let choiceLocked = false;
 function startLevel1() {
   gameState.l1 = { index: 0, score: 0, correct: 0, current: null };
   document.getElementById("l1Name").innerText = gameState.name;
+
+  // Registreer student in Firebase
+  dbUpdateStudent(1, 0, "speelt");
+
   show("level1");
   loadCard();
 }
@@ -1263,6 +1493,13 @@ function loadCard() {
     buildRebus("rb1");
     show("l1end");
     startTeacherTap("unlock1");
+
+    // Firebase: status bijwerken + luisteren op Level 2-startsignaal
+    dbUpdateStudent(1, l1.score, "wacht");
+    listenForLevel(2, () => {
+      dbUpdateStudent(2, l1.score, "speelt");
+      startLevel2();
+    });
     return;
   }
 
@@ -1530,6 +1767,14 @@ function checkL2Done() {
       buildRebus("rb2");
       show("l2end");
       startTeacherTap("unlock2");
+
+      // Firebase: status bijwerken + luisteren op Level 3-startsignaal
+      const totalScore = gameState.l1.score + l2.score;
+      dbUpdateStudent(2, totalScore, "wacht");
+      listenForLevel(3, () => {
+        dbUpdateStudent(3, totalScore, "speelt");
+        startLevel3();
+      });
     }, 900);
   }
 }
@@ -1591,6 +1836,10 @@ function loadL3Card() {
     document.getElementById("l3FinalScore").innerText = totalScore;
     document.getElementById("l3Breakdown").innerText  =
       "L1: " + gameState.l1.score + " pnt  ·  L2: " + gameState.l2.score + " pnt  ·  L3: " + s.score + " pnt";
+
+    // Firebase: eindstand opslaan
+    dbUpdateStudent(3, totalScore, "klaar");
+
     show("l3end");
     return;
   }
