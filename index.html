@@ -953,20 +953,26 @@ async function teacherReset() {
   if (!confirm("Sessie wissen? Alle scores verdwijnen.")) return;
   await dbSet("studenten", null);
   await dbSet("huidigLevel", 1);
-  document.getElementById("d-student-list").innerHTML = "";
-  document.getElementById("d-count").innerText   = "0";
-  document.getElementById("d-waiting").innerText = "0";
-  document.getElementById("d-done").innerText    = "0";
+  renderStudentList({});
 }
 
 function startDocentMode() {
   const today = new Date().toLocaleDateString("nl-NL", { weekday:"long", day:"numeric", month:"long" });
-  document.getElementById("d-sessie").innerText = "Sessie " + today;
+  document.getElementById("d-sessie").innerText = "Sessie " + today.charAt(0).toUpperCase() + today.slice(1);
   show("docent");
+  startDocentPolling();
+}
 
-  dbListen("studenten", (data) => {
-    renderStudentList(data || {});
-  });
+let docentPollInterval = null;
+
+function startDocentPolling() {
+  if (docentPollInterval) clearInterval(docentPollInterval);
+  async function poll() {
+    const data = await dbGet("studenten");
+    renderStudentList(data && typeof data === "object" ? data : {});
+  }
+  poll();
+  docentPollInterval = setInterval(poll, 3000);
 }
 
 function renderStudentList(data) {
@@ -1489,8 +1495,7 @@ function loadCard() {
 
   if (l1.index >= total) {
     document.getElementById("l1FinalScore").innerText = l1.score;
-    document.getElementById("l1Breakdown").innerText =
-      l1.correct + " van de " + total + " goed";
+    document.getElementById("l1Breakdown").innerText = "Jouw besluiten tellen mee voor jouw land.";
     buildRebus("rb1");
     show("l1end");
     startTeacherTap("unlock1");
@@ -1763,8 +1768,7 @@ function checkL2Done() {
     clearInterval(l2.interval);
     setTimeout(() => {
       document.getElementById("l2FinalScore").innerText = l2.score;
-      document.getElementById("l2Breakdown").innerText  =
-        l2.correct + " van de " + l2.total + " goed";
+      document.getElementById("l2Breakdown").innerText = "Jouw redactie heeft de krantenkoppen gesorteerd.";
       buildRebus("rb2");
       show("l2end");
       startTeacherTap("unlock2");
@@ -1835,8 +1839,7 @@ function loadL3Card() {
   if (s.index >= s.total) {
     const totalScore = gameState.l1.score + gameState.l2.score + s.score;
     document.getElementById("l3FinalScore").innerText = totalScore;
-    document.getElementById("l3Breakdown").innerText  =
-      "L1: " + gameState.l1.score + " pnt  ·  L2: " + gameState.l2.score + " pnt  ·  L3: " + s.score + " pnt";
+    document.getElementById("l3Breakdown").innerText  = "Jouw land staat. Goed gedaan.";
 
     // Firebase: eindstand opslaan
     dbUpdateStudent(3, totalScore, "klaar");
